@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slurm Workload Manager Demo</title>
+  <link rel="stylesheet" href="./slurm.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <a class="back-link" href="../index.html">All demos</a>
+      <h1>Slurm Workload Manager</h1>
+      <p class="subtitle">A colorful interactive Slurm simulator: submit jobs, watch scheduling decisions, and inspect Slurm-style command output.</p>
+    </div>
+    <div class="clock-panel" aria-label="cluster status">
+      <span class="clock-label">Cluster time</span>
+      <strong id="clock">Mon 08:00</strong>
+      <span id="daemonState" class="daemon-state">slurmctld idle</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="submit-panel" aria-labelledby="submitTitle">
+      <div class="section-head">
+        <h2 id="submitTitle">Submit Jobs</h2>
+        <span class="badge">sbatch</span>
+      </div>
+
+      <form id="jobForm" class="job-form">
+        <label>
+          Job name
+          <input id="jobName" name="jobName" type="text" maxlength="24" value="bert-train" autocomplete="off" />
+        </label>
+
+        <label>
+          Partition
+          <select id="partition" name="partition">
+            <option value="cpu">cpu</option>
+            <option value="gpu">gpu</option>
+            <option value="highmem">highmem</option>
+          </select>
+        </label>
+
+        <div class="inline-grid">
+          <label>
+            Nodes
+            <input id="nodes" name="nodes" type="number" min="1" max="4" step="1" value="1" />
+          </label>
+          <label>
+            CPUs/node
+            <input id="cpus" name="cpus" type="number" min="1" max="64" step="1" value="8" />
+          </label>
+        </div>
+
+        <div class="inline-grid">
+          <label>
+            Memory GB
+            <input id="memory" name="memory" type="number" min="4" max="512" step="4" value="32" />
+          </label>
+          <label>
+            Time limit
+            <input id="duration" name="duration" type="number" min="5" max="240" step="5" value="45" />
+          </label>
+        </div>
+
+        <label>
+          GPUs/job
+          <input id="gpus" name="gpus" type="number" min="0" max="8" step="1" value="0" />
+        </label>
+
+        <label>
+          Priority
+          <input id="priority" name="priority" type="range" min="0" max="100" step="5" value="45" />
+          <span id="priorityText" class="range-value">45</span>
+        </label>
+
+        <button id="submitBtn" class="primary-action" type="submit">Submit job</button>
+      </form>
+
+      <div class="button-row">
+        <button id="burstBtn" type="button">Load burst</button>
+        <button id="maintenanceBtn" type="button">Toggle maint</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+
+      <div class="script-box">
+        <div class="script-title">Generated script</div>
+        <pre id="scriptPreview"></pre>
+      </div>
+    </section>
+
+    <section class="cluster-panel" aria-labelledby="clusterTitle">
+      <div class="cluster-toolbar">
+        <div class="section-head">
+          <h2 id="clusterTitle">Cluster View</h2>
+          <span id="policyBadge" class="badge info">priority + backfill</span>
+        </div>
+        <div class="sim-controls">
+          <button id="stepBtn" type="button" title="Advance one scheduler cycle">Step</button>
+          <button id="playBtn" type="button" title="Run or pause the simulation">Run</button>
+          <label class="speed-control" title="Simulation speed">
+            Speed
+            <input id="speed" type="range" min="1" max="8" value="3" />
+          </label>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div><span>Utilization</span><strong id="utilMetric">0%</strong></div>
+        <div><span>Pending</span><strong id="pendingMetric">0</strong></div>
+        <div><span>Running</span><strong id="runningMetric">0</strong></div>
+        <div><span>Finished</span><strong id="doneMetric">0</strong></div>
+      </div>
+
+      <div id="nodeGrid" class="node-grid" aria-label="cluster nodes"></div>
+
+      <div class="tables">
+        <div>
+          <div class="table-head">
+            <h3>squeue</h3>
+            <span>Pending and running jobs</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>JOBID</th>
+                  <th>NAME</th>
+                  <th>ST</th>
+                  <th>PART</th>
+                  <th>REQ</th>
+                  <th>TIME</th>
+                  <th>NODELIST/REASON</th>
+                </tr>
+              </thead>
+              <tbody id="queueBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="table-head">
+            <h3>Controller log</h3>
+            <span>Recent scheduling decisions</span>
+          </div>
+          <div id="log" class="log" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspect-panel" aria-labelledby="inspectTitle">
+      <div class="section-head">
+        <h2 id="inspectTitle">Inspect</h2>
+        <span class="badge accent">scontrol</span>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Slurm commands">
+        <button class="tab active" type="button" data-tab="sinfo">sinfo</button>
+        <button class="tab" type="button" data-tab="squeue">squeue</button>
+        <button class="tab" type="button" data-tab="sacct">sacct</button>
+      </div>
+
+      <pre id="commandOutput" class="command-output"></pre>
+
+      <div class="detail-box">
+        <h3 id="detailTitle">Scheduler cycle</h3>
+        <p id="detailText">Submit jobs to see Slurm place them on nodes, hold them pending, or backfill them into short gaps.</p>
+      </div>
+
+      <div class="concept-list">
+        <div>
+          <strong>Partitions</strong>
+          <span>Queues mapped to groups of nodes with policy limits.</span>
+        </div>
+        <div>
+          <strong>Resources</strong>
+          <span>Jobs request CPUs, memory, GPUs, nodes, and wall time.</span>
+        </div>
+        <div>
+          <strong>Reasons</strong>
+          <span>Pending jobs report why they cannot start yet.</span>
+        </div>
+        <div>
+          <strong>Backfill</strong>
+          <span>Short jobs can run when they do not delay higher priority work.</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="./slurm.js"></script>
+</body>
+</html>
