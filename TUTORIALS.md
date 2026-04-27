@@ -42,7 +42,7 @@ npm run demo:slurm
 
 ### 2. Open in your browser
 
-Navigate to: **http://localhost:3462/slurm-demo/**
+Navigate to: **https://namanadep.github.io/slurm-interactive-demo/**
 
 ### 3. If you get stuck, click Reset
 
