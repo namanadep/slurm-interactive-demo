@@ -2,7 +2,7 @@
 
 **Interactive guide to cluster scheduling.** Learn how [Slurm](https://slurm.schedmd.com/) decides which jobs run where.
 
-- 🌐 **Demo URL:** http://localhost:3462/slurm-demo/
+- 🌐 **Demo URL:** https://namanadep.github.io/slurm-interactive-demo/
 - ⏱️ **Time:** ~45 minutes (7 journeys, ~5 min each)
 - 📸 **Screenshots:** In the `images/` folder (optional reference)
 
